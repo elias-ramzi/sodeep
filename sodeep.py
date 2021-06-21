@@ -131,3 +131,30 @@ class SpearmanLoss(torch.nn.Module):
             0)).view(-1)
 
         return self.criterion_mse(rank_pred, rank_gt) + self.lbd * self.criterionl1(mem_pred, mem_gt)
+
+
+class SorterAPLoss(torch.nn.Module):
+    """ Loss function  inspired by mean Average Precision """
+    def __init__(self, sorter_type, seq_len=None, sorter_state_dict=None, return_type='1-mAP'):
+        super().__init__()
+        assert return_type in ['1-mAP', 'mAP', '1-AP', 'AP']
+        self.return_type = return_type
+
+        self.sorter = model_loader(sorter_type, seq_len, sorter_state_dict)
+
+    def forward(self, scores, target):
+        mask = torch.eye(scores.size(0), device=scores.device)
+
+        ranks = self.sorter(scores - 2*mask)
+        pos_ranks = self.sorter(scores - 2*(mask + (1-target)))
+
+        ap = (pos_ranks / ranks).sum(-1) / (target.sum(-1) - 1)
+
+        if self.return_type == '1-mAP':
+            return 1-ap.mean()
+        elif self.return_type == '1-AP':
+            return 1-ap
+        elif self.return_type == 'mAP':
+            return ap.mean()
+        elif self.return_type == 'AP':
+            return ap

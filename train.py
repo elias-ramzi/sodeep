@@ -31,7 +31,7 @@ from dataset import SeqDataset
 from model import model_loader
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torch.optim.lr_scheduler import StepLR
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from utils import AverageMeter, save_checkpoint, log_epoch, count_parameters
 
 
